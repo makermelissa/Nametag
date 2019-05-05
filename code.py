@@ -38,7 +38,7 @@ splash.append(bg_sprite)
 
 rect = Rect(0, 50, 160, 70, fill=0xffffff)
 splash.append(rect)
-"""
+
 # Load the font
 hello_string = "HELLO"
 large_font_name = "/fonts/Verdana-Bold-18.bdf"
@@ -75,7 +75,7 @@ name_text.x = (80 - w // 2)
 name_text.y = (100 - int(h / 2.75))
 name_text.color = 0x0
 splash.append(name_text)
-"""
+
 # Remap the calculated rotation to 0 - 255
 def remap(vector):
     return int(((255 * vector + 85) * 0.75) + 0.5)
