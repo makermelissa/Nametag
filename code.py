@@ -11,6 +11,7 @@ import displayio
 import digitalio
 from gamepadshift import GamePadShift
 import neopixel
+import time
 from math import sqrt, cos, sin, radians
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_text.label import Label
@@ -50,7 +51,7 @@ small_font_name = "/fonts/Arial-12.bdf"
 small_font = bitmap_font.load_font(small_font_name)
 small_font.load_glyphs(my_name_string.encode('utf-8'))
 
-name_font_name = "/fonts/Comic-Bold-18.bdf"
+name_font_name = "/fonts/Noto-18.bdf"
 name_font = bitmap_font.load_font(name_font_name)
 name_font.load_glyphs(NAME_STRING.encode('utf-8'))
 
@@ -70,9 +71,9 @@ splash.append(mni_text)
 
 name_text = Label(name_font, text=NAME_STRING, line_spacing=0.75)
 (x, y, w, h) = name_text.bounding_box
-print(h)
+
 name_text.x = (80 - w // 2)
-name_text.y = (100 - int(h / 2.75))
+name_text.y = 85
 name_text.color = 0x0
 splash.append(name_text)
 
@@ -114,32 +115,23 @@ BUTTON_START = const(4)
 BUTTON_A = const(2)
 BUTTON_B = const(1)
 
-def get_buttons():
-    buttons = []
-    latch.value = False
-    latch.value = True
-    for value in range(0, 8):
-        buttons.append(out.value)
-        clock.value = False
-        clock.value = True
-    return buttons
-
 def check_buttons(buttons):
     global direction, speed, brightness
-    if buttons & BUTTON_RIGHT > 0:
+    if (buttons & BUTTON_RIGHT) > 0:
         direction = -1
-    elif buttons & BUTTON_LEFT > 0:
+    elif (buttons & BUTTON_LEFT) > 0:
         direction = 1
-    elif buttons & BUTTON_UP > 0 and speed < 10:
+    elif (buttons & BUTTON_UP) > 0 and speed < 10:
         speed += 1
-    elif buttons & BUTTON_DOWN > 0 and speed > 1:
+    elif (buttons & BUTTON_DOWN) > 0 and speed > 1:
         speed -= 1
-    elif buttons & BUTTON_A > 0 and brightness < 0.5:
-        brightness += 0.05
-    elif buttons & BUTTON_B > 0 and brightness > 0.05:
-        brightness -= 0.05
+    elif (buttons & BUTTON_A) > 0 and brightness < 0.5:
+        brightness += 0.025
+    elif (buttons & BUTTON_B) > 0 and brightness > 0.025:
+        brightness -= 0.025
 
-old_buttons = 0
+current_buttons = pad.get_pressed()
+last_read = 0
 while True:
     for color in range(0, 360, speed):
         for index in range(0, 5):
@@ -151,7 +143,10 @@ while True:
             neopixels[index] = palette[palette_index]
         neopixels.show()
         neopixels.brightness = brightness
-        buttons = pad.get_pressed()
-        if old_buttons != buttons:
+        # Reading buttons too fast returns 0
+        if (last_read + 0.1) < time.monotonic():
+            buttons = pad.get_pressed()
+            last_read = time.monotonic()
+        if current_buttons != buttons:
             check_buttons(buttons)
-            old_buttons = buttons
+            current_buttons = buttons
