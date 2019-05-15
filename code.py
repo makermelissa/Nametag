@@ -1,10 +1,7 @@
 """
-This test will initialize the display using displayio
-and draw a solid red background
+This is a name tag that is intended to be displayed on the PyBadge
+Feel free to customize it to your heart's content
 """
-
-NAME_STRING = "Blinka"
-NEOPIXEL_COUNT = 5
 
 import board
 from micropython import const
@@ -18,64 +15,94 @@ from adafruit_display_shapes.rect import Rect
 from adafruit_display_text.label import Label
 from adafruit_bitmap_font import bitmap_font
 
+# Button Constants
+BUTTON_LEFT = const(128)
+BUTTON_UP = const(64)
+BUTTON_DOWN = const(32)
+BUTTON_RIGHT = const(16)
+BUTTON_SEL = const(8)
+BUTTON_START = const(4)
+BUTTON_A = const(2)
+BUTTON_B = const(1)
+
+# Customizations
+NAME_STRING = "Blinka"
+NAME_FONTNAME = "/fonts/Noto-18.bdf"
+NEOPIXEL_COUNT = 5
+BACKGROUND_COLOR = 0xFF0000
+FOREGROUND_COLOR = 0xFFFFFF
+BACKGROUND_TEXT_COLOR = 0xFFFFFF
+FOREGROUND_TEXT_COLOR = 0x000000
+
+# Default Values
 brightness = 0.2
 direction = 1
 speed = 1
 
+# Define the NeoPixel and Game Pad Objects
 neopixels = neopixel.NeoPixel(board.NEOPIXEL, 5, brightness=brightness,
                               auto_write=False, pixel_order=neopixel.GRB)
 
-# Make the display context
+pad = GamePadShift(digitalio.DigitalInOut(board.BUTTON_CLOCK),
+                   digitalio.DigitalInOut(board.BUTTON_OUT),
+                   digitalio.DigitalInOut(board.BUTTON_LATCH))
+
+# Make the Display Background
 splash = displayio.Group(max_size=20)
 board.DISPLAY.show(splash)
 
 color_bitmap = displayio.Bitmap(160, 128, 1)
 color_palette = displayio.Palette(1)
-color_palette[0] = 0xFF0000
+color_palette[0] = BACKGROUND_COLOR
 
 bg_sprite = displayio.TileGrid(color_bitmap,
                                pixel_shader=color_palette,
                                x=0, y=0)
 splash.append(bg_sprite)
 
-rect = Rect(0, 50, 160, 70, fill=0xffffff)
+# Draw a Foreground Rectangle where the name goes
+rect = Rect(0, 50, 160, 70, fill=FOREGROUND_COLOR)
 splash.append(rect)
 
-# Load the font
+# Load the Hello font
 hello_string = "HELLO"
 large_font_name = "/fonts/Verdana-Bold-18.bdf"
 large_font = bitmap_font.load_font(large_font_name)
 large_font.load_glyphs(hello_string.encode('utf-8'))
 
+# Load the "My Name Is" font
 my_name_string = "MY NAME IS"
 small_font_name = "/fonts/Arial-12.bdf"
 small_font = bitmap_font.load_font(small_font_name)
 small_font.load_glyphs(my_name_string.encode('utf-8'))
 
-name_font_name = "/fonts/Noto-18.bdf"
+# Load the Name font
+name_font_name = NAME_FONTNAME
 name_font = bitmap_font.load_font(name_font_name)
 name_font.load_glyphs(NAME_STRING.encode('utf-8'))
 
+# Setup and Center the Hello Label
 hello_text = Label(large_font, text=hello_string)
 (x, y, w, h) = hello_text.bounding_box
 hello_text.x = (80 - w // 2)
 hello_text.y = 15
-hello_text.color = 0xffffff
+hello_text.color = BACKGROUND_TEXT_COLOR
 splash.append(hello_text)
 
+# Setup and Center the "My Name Is" Label
 mni_text = Label(small_font, text=my_name_string)
 (x, y, w, h) = mni_text.bounding_box
 mni_text.x = (80 - w // 2)
 mni_text.y = 35
-mni_text.color = 0xffffff
+mni_text.color = BACKGROUND_TEXT_COLOR
 splash.append(mni_text)
 
+# Setup and Center the Name Label
 name_text = Label(name_font, text=NAME_STRING, line_spacing=0.75)
 (x, y, w, h) = name_text.bounding_box
-
 name_text.x = (80 - w // 2)
 name_text.y = 85
-name_text.color = 0x0
+name_text.color = FOREGROUND_TEXT_COLOR
 splash.append(name_text)
 
 # Remap the calculated rotation to 0 - 255
@@ -103,19 +130,7 @@ for degree in range(0, 360):
 for x in range(0, NEOPIXEL_COUNT):
     pixels.append(x * 360 // NEOPIXEL_COUNT)
 
-pad = GamePadShift(digitalio.DigitalInOut(board.BUTTON_CLOCK),
-                   digitalio.DigitalInOut(board.BUTTON_OUT),
-                   digitalio.DigitalInOut(board.BUTTON_LATCH))
-
-BUTTON_LEFT = const(128)
-BUTTON_UP = const(64)
-BUTTON_DOWN = const(32)
-BUTTON_RIGHT = const(16)
-BUTTON_SEL = const(8)
-BUTTON_START = const(4)
-BUTTON_A = const(2)
-BUTTON_B = const(1)
-
+# Respond to the buttons
 def check_buttons(buttons):
     global direction, speed, brightness
     if (buttons & BUTTON_RIGHT) > 0:
@@ -131,6 +146,7 @@ def check_buttons(buttons):
     elif (buttons & BUTTON_B) > 0 and brightness > 0.025:
         brightness -= 0.025
 
+# Main Loop
 current_buttons = pad.get_pressed()
 last_read = 0
 while True:
