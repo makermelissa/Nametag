@@ -3,7 +3,8 @@ This test will initialize the display using displayio
 and draw a solid red background
 """
 
-NAME_STRING = "@Maker\nMelissa"
+NAME_STRING = "Blinka"
+NEOPIXEL_COUNT = 5
 
 import board
 from micropython import const
@@ -99,8 +100,8 @@ for degree in range(0, 360):
     palette.append(color[0] << 16 | color[1] << 8 | color[2])
 
 # Create the Pattern
-for x in range(0, 5):
-    pixels.append(x * 360 // 5)
+for x in range(0, NEOPIXEL_COUNT):
+    pixels.append(x * 360 // NEOPIXEL_COUNT)
 
 pad = GamePadShift(digitalio.DigitalInOut(board.BUTTON_CLOCK),
                    digitalio.DigitalInOut(board.BUTTON_OUT),
@@ -134,7 +135,7 @@ current_buttons = pad.get_pressed()
 last_read = 0
 while True:
     for color in range(0, 360, speed):
-        for index in range(0, 5):
+        for index in range(0, NEOPIXEL_COUNT):
             palette_index = pixels[index] + color * direction
             if palette_index >= 360:
                 palette_index -= 360
